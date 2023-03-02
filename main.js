@@ -52,9 +52,12 @@ function updateTime() {
   document.getElementById("date").innerHTML = DateString;
 }
 
-setInterval(updateTime, 1000);
+document.addEventListener("DOMContentLoaded", function () {
+  updateTime();
+  setInterval(updateTime, 500);
+});
 
-function loadRandomBackground() {
+function changeBackground() {
   var images = [
     "local-images/1.jpg",
     "local-images/2.jpg",
@@ -71,34 +74,49 @@ function loadRandomBackground() {
     "url('" + randomImage + "') no-repeat center";
 }
 
-function checkInternetConnectivity() {
-  var imageAddr = "https://source.unsplash.com/user/marekpiwnicki/1920x1080";
-  var downloadImage = new Image();
-  downloadImage.onload = function () {
-    document.body.style.background =
-      "url('" + imageAddr + "')  no-repeat center";
-  };
-  downloadImage.onerror = function () {
-    loadRandomBackground();
-  };
-  downloadImage.src = imageAddr + "?n=" + Math.random();
-}
+document.addEventListener("DOMContentLoaded", function () {
+  changeBackground();
+});
 
-checkInternetConnectivity();
+setInterval(changeBackground, 3600000);
 
 function quoteGen() {
   const quote = document.getElementById("mainquote");
-  const author = document.getElementById("author");
+  const author = document.getElementById("mainauthor");
+
+  const cachedQuote = localStorage.getItem("quote");
+  if (cachedQuote) {
+    const cachedData = JSON.parse(cachedQuote);
+    const cachedTimestamp = new Date(cachedData.timestamp);
+    const now = new Date();
+    const diff = (now - cachedTimestamp) / (1000 * 60 * 60);
+    if (diff < 1) {
+      quote.innerHTML = `“${cachedData.content}”`;
+      author.innerHTML = `- ${cachedData.author}`;
+      return;
+    }
+  }
 
   fetch("http://api.quotable.io/random?maxLength=50")
     .then((res) => res.json())
     .then((data) => {
-      mainquote.innerHTML = `“${data.content}”`;
-      mainauthor.innerHTML = `- ${data.author}`;
+      quote.innerHTML = `“${data.content}”`;
+      author.innerHTML = `- ${data.author}`;
+      data.timestamp = new Date().toISOString();
+      localStorage.setItem("quote", JSON.stringify(data));
+    })
+    .catch((error) => {
+      console.log(error);
     });
 }
 
-quoteGen();
+setInterval(() => {
+  quoteGen();
+}, 60 * 60 * 1000);
+
+document.addEventListener("DOMContentLoaded", () => {
+  quoteGen();
+});
 
 let weather = {
   apiKey: "f13b50734a9037f193248d4330b2360c",
@@ -120,7 +138,13 @@ let weather = {
         this.apiKey
     )
       .then((response) => response.json())
-      .then((data) => this.displayWeather(data, unit));
+      .then((data) => {
+        this.displayWeather(data, unit);
+        localStorage.setItem("weatherData", JSON.stringify(data));
+      })
+      .catch((error) => {
+        console.error("Error fetching weather data: ", error);
+      });
   },
 
   displayWeather: function (data, unit) {
@@ -167,12 +191,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const nameInput = document.getElementById("askname-input");
   var greeting = document.getElementById("greet");
 
-  const savedCity = localStorage.getItem("city");
-  if (savedCity) {
-    weather.fetchWeather(savedCity, weather.defaultUnit);
+  const cachedData = localStorage.getItem("weatherData");
+  if (cachedData) {
+    const data = JSON.parse(cachedData);
+    weather.displayWeather(data, weather.defaultUnit);
   } else {
-    weather.fetchWeather(weather.defaultCity, weather.defaultUnit);
+    const savedCity = localStorage.getItem("city");
+    if (savedCity) {
+      weather.fetchWeather(savedCity, weather.defaultUnit);
+    } else {
+      weather.fetchWeather(weather.defaultCity, weather.defaultUnit);
+    }
   }
+
+  setInterval(function () {
+    const savedCity = localStorage.getItem("city");
+    weather.fetchWeather(savedCity, weather.defaultUnit);
+  }, 30 * 60 * 1000);
 
   searchInput.addEventListener("keyup", function (event) {
     if (event.key === "Enter") {
