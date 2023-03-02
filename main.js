@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let weather = {
-  apiKey: "f13b50734a9037f193248d4330b2360c",
+  apiKey: "API_KEY_HERE",
   defaultCity: "Delhi",
   defaultUnit: localStorage.getItem("unit") || "metric",
   fetchWeather: function (city, unit) {
