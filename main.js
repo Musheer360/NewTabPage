@@ -1,60 +1,63 @@
-function updateTime() {
-  var clock = new Date();
-  var hours = clock.getHours();
-  var minutes = clock.getMinutes();
-  var timeof;
-
-  if (hours < 12 && hours >= 0) {
-    timeof = "morning";
-  } else if (hours < 18 && hours >= 12) {
-    timeof = "afternoon";
-  } else if (hours >= 18 && hours <= 23) {
-    timeof = "evening";
-  }
-
+document.addEventListener("DOMContentLoaded", function () {
   var asknameInput = document.getElementById("askname-input");
   var greeting = document.getElementById("greet");
-  var name = localStorage.getItem("name");
-
-  if (name) {
-    greeting.innerHTML = "Good " + timeof + ", " + name + "!";
-  } else {
-    greeting.innerHTML = "Good " + timeof + "!";
-    asknameInput.style.top = "3.5%";
-  }
+  var timeEl = document.getElementById("time");
+  var dateEl = document.getElementById("date");
 
   asknameInput.addEventListener("change", function () {
-    name = asknameInput.value;
-    localStorage.setItem("name", name);
-    greeting.innerHTML = `Good ${timeof}, ${name}!`;
+    localStorage.setItem("name", asknameInput.value);
+    var name = asknameInput.value;
+    var timeof = getTimeOfDay();
+    greeting.textContent = `Good ${timeof}, ${name}!`;
   });
 
-  if (hours == 0) {
-    hours = 12;
-  } else if (hours > 12) {
-    hours = hours % 12;
+  function getTimeOfDay() {
+    var clock = new Date();
+    var hours = clock.getHours();
+    if (hours < 12) {
+      return "morning";
+    } else if (hours < 18) {
+      return "afternoon";
+    } else {
+      return "evening";
+    }
   }
 
-  hours = hours < 10 ? "0" + hours : hours;
-  minutes = minutes < 10 ? "0" + minutes : minutes;
+  function updateTime() {
+    var clock = new Date();
+    var hours = clock.getHours();
+    var minutes = clock.getMinutes();
+    var timeof = getTimeOfDay();
 
-  var options = {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  };
-  var date = clock.toLocaleDateString("en-US", options);
+    var name = localStorage.getItem("name");
 
-  var TimeString = hours + ":" + minutes;
-  var DateString = date;
-  document.getElementById("time").innerHTML = TimeString;
-  document.getElementById("date").innerHTML = DateString;
-}
+    if (name) {
+      greeting.textContent = "Good " + timeof + ", " + name + "!";
+    } else {
+      greeting.textContent = "Good " + timeof + "!";
+      asknameInput.style.top = "3.5%";
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
+    hours = hours % 12 || 12;
+    hours = hours < 10 ? "0" + hours : hours;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+
+    var options = {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    };
+    var date = new Intl.DateTimeFormat("en-US", options).format(clock);
+
+    var TimeString = hours + ":" + minutes;
+    var DateString = date;
+    if (timeEl.textContent !== TimeString) timeEl.textContent = TimeString;
+    if (dateEl.textContent !== DateString) dateEl.textContent = DateString;
+  }
+
   updateTime();
-  setInterval(updateTime, 500);
+  setInterval(updateTime, 1000);
 });
 
 function changeBackground() {
@@ -67,6 +70,8 @@ function changeBackground() {
     "local-images/6.jpg",
     "local-images/7.jpg",
     "local-images/8.jpg",
+    "local-images/9.jpg",
+    "local-images/10.jpg",
   ];
   var randomIndex = Math.floor(Math.random() * images.length);
   var randomImage = images[randomIndex];
@@ -204,10 +209,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  setInterval(function () {
+  setTimeout(function () {
     const savedCity = localStorage.getItem("city");
     weather.fetchWeather(savedCity, weather.defaultUnit);
-  }, 30 * 60 * 1000);
+
+    setInterval(function () {
+      const savedCity = localStorage.getItem("city");
+      weather.fetchWeather(savedCity, weather.defaultUnit);
+    }, 30 * 60 * 1000);
+  }, 5000);
 
   searchInput.addEventListener("keyup", function (event) {
     if (event.key === "Enter") {
